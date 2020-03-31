@@ -1,8 +1,10 @@
 
 const express = require("express")
 const server = express()
+const db = require("./db")
 
-const ideas=[
+
+/* const ideas=[
     {
        img:"https://image.flaticon.com/icons/svg/2729/2729007.svg",
        title:"Cursos de Programação",
@@ -52,12 +54,15 @@ const ideas=[
      },
 
 
-]
+] */
 
 
 
 //configurar arquivos estáticos (css, scripts, imagens)
 server.use(express.static("public"))
+
+//hablitar o uso do req.body
+server.use(express.urlencoded({ extended: true }))
 
 //Configuração do Nunjucks
 
@@ -69,26 +74,60 @@ nunjucks.configure("views",{
 
 // rota criada / 
 // captura pedido do cliente para responder 
-server.get("/", function(req, res){
-    return res.render("index.html", { ideas:lastIdeas })
+server.get("/", function (req, res) {
+    db.all(`SELECT * FROM ideas`, function (err, rows) {
+        if (err) {
+            console.log(err)
+            return res.send("Erro no banco de dados!")
+        }
+
+        const reversedIdeas = [...rows].reverse();
+        let lastIdeas = [];
+        for (let idea of reversedIdeas) {
+            if (lastIdeas.length < 3) {
+                lastIdeas.push(idea);
+            }
+        }
+
+        return res.render("index.html", { ideas: lastIdeas })
+    });
+
+});
+
+server.post("/", function (req, res) {
+    const query = `INSERT INTO ideas(
+        image,
+        title,
+        category,
+        description,
+        link
+    ) VALUES(?,?,?,?,?);`
+
+    const values = [
+        req.body.image,
+        req.body.title,
+        req.body.category,
+        req.body.description,
+        req.body.link
+    ]
+
+    db.run(query, values, function (err) {
+        if (err){
+            console.log(err);
+            return res.send("Erro no banco de dados!")
+        }
+        return res.redirect("/ideias")
+    });
 })
 
-const reversedIdeas=[...ideas].reverse()
+server.get("/ideias", function (req, res) {
+    db.all(`SELECT * FROM ideas`, function (err, rows) {
+        if (err) return console.log(err)
 
-let lastIdeas =[]
-for(let idea of reversedIdeas){
-    if(lastIdeas.length<2)
-    {
-        lastIdeas.push(idea)
-    }
-}
+        const reversedIdeas = [...rows];
 
-
-
-
-server.get("/ideias", function(req, res){
-    const reversedIdeas=[...ideas].reverse()
-    return res.render("ideias.html", {ideas: reversedIdeas})
+        return res.render("ideias.html", { ideas: reversedIdeas.reverse() })
+    });
 })
 
 //servidor ligado na porta 3000

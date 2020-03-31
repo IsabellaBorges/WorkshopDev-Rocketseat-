@@ -144,6 +144,7 @@ button:hover{
     align-items: center;
     justify-content: center;
 
+
 }
 
 #modal.addScroll{
@@ -267,8 +268,6 @@ form button:hover{
     
 }
 
-
-
 section#title{
     text-align: center;
 }
@@ -287,9 +286,11 @@ section#ideas{
     gap: 20px;
 
 }
+
 section#ideas .idea{
     margin:0;
 }
+
 
 section#ideas, 
 section#title,
